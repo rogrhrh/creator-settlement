@@ -9,11 +9,11 @@
 | Phase | 내용 | 상태 |
 |-------|------|------|
 | Phase 0 | 요구사항 분석 및 문서 작성 | ✅ 완료 |
-| Phase 1 | 도메인 기반 구성 | ⬜ 대기 |
-| Phase 2 | 판매/환불 등록 API | ⬜ 대기 |
-| Phase 3 | 크리에이터 월별 정산 조회 API | ⬜ 대기 |
-| Phase 4 | 운영자 기간별 정산 집계 API | ⬜ 대기 |
-| Phase 5 | 품질, 선택 구현, README | ⬜ 대기 |
+| Phase 1 | 도메인 기반 구성 | ✅ 완료 |
+| Phase 2 | 판매/환불 등록 API | ✅ 완료 |
+| Phase 3 | 크리에이터 월별 정산 조회 API | ✅ 완료 |
+| Phase 4 | 운영자 기간별 정산 집계 API | ✅ 완료 |
+| Phase 5 | 품질, 선택 구현, README | ✅ 완료 |
 
 ---
 
@@ -29,14 +29,11 @@
 
 ---
 
-## 다음 작업
+## 완료된 구현 (2026-05-25)
 
-Phase 1 — 도메인 기반 구성:
-1. `application.yaml` 설정
-2. 엔티티 4개 (`Creator`, `Course`, `SaleRecord`, `RefundRecord`)
-3. Repository 4개
-4. `FeePolicy`, `KstDateRange`, `SettlementResult`, `SettlementCalculator`
-5. `DataLoader` 샘플 데이터 삽입
+- 38 tests, 0 failures — `./gradlew test` BUILD SUCCESSFUL
+- 최종 커밋: `c295f81` (README 포함 전체 완성)
+- 필수 시나리오 4개 전체 통과 (creator-1 / 2025-03 → payoutAmount: 120,000원)
 
 ---
 
