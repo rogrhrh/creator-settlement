@@ -12,6 +12,7 @@ assignees: ''
 - [ ] refactor
 - [ ] test
 - [ ] docs
+- [ ] chore
 
 ## 작업 내용
 <!-- 무엇을 할 것인지 -->

@@ -1,7 +1,7 @@
 # 작업 컨벤션
 
 ## 이슈
-- feat, fix 작업만 이슈 생성 (refactor, docs 등은 생략)
+- feat, fix, test, docs 작업은 이슈 생성 (refactor, chore는 생략)
 - 제목 형식: `[feat] 음수 정산 처리 추가`
 
 ## 브랜치
