@@ -1,16 +1,22 @@
 package com.ahn.settlement.controller;
 
 import com.ahn.settlement.auth.AuthValidator;
+import com.ahn.settlement.dto.request.SettlementCreateRequest;
 import com.ahn.settlement.dto.response.AdminSettlementResponse;
 import com.ahn.settlement.dto.response.MonthlySettlementResponse;
+import com.ahn.settlement.dto.response.SettlementRecordResponse;
 import com.ahn.settlement.exception.InvalidRequestException;
+import com.ahn.settlement.service.SettlementConfirmService;
 import com.ahn.settlement.service.SettlementService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/settlements")
@@ -18,7 +24,42 @@ import java.time.YearMonth;
 public class SettlementController {
 
     private final SettlementService settlementService;
+    private final SettlementConfirmService settlementConfirmService;
     private final AuthValidator authValidator;
+
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public SettlementRecordResponse createSettlement(
+            @RequestBody @Valid SettlementCreateRequest request,
+            @RequestHeader("X-User-Role") String userRole) {
+        authValidator.validateAdminAccess(userRole);
+        return settlementConfirmService.create(request);
+    }
+
+    @PatchMapping("/{id}/confirm")
+    public SettlementRecordResponse confirmSettlement(
+            @PathVariable String id,
+            @RequestHeader("X-User-Role") String userRole) {
+        authValidator.validateAdminAccess(userRole);
+        return settlementConfirmService.confirm(id);
+    }
+
+    @PatchMapping("/{id}/pay")
+    public SettlementRecordResponse paySettlement(
+            @PathVariable String id,
+            @RequestHeader("X-User-Role") String userRole) {
+        authValidator.validateAdminAccess(userRole);
+        return settlementConfirmService.pay(id);
+    }
+
+    @GetMapping("/creators/{creatorId}/history")
+    public List<SettlementRecordResponse> getSettlementHistory(
+            @PathVariable String creatorId,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String userRole) {
+        authValidator.validateCreatorAccess(userId, userRole, creatorId);
+        return settlementConfirmService.getHistory(creatorId);
+    }
 
     @GetMapping("/creators/{creatorId}")
     public MonthlySettlementResponse getMonthlySettlement(
