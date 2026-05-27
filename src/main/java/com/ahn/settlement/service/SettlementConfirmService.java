@@ -1,6 +1,5 @@
 package com.ahn.settlement.service;
 
-import com.ahn.settlement.domain.FeePolicy;
 import com.ahn.settlement.domain.SettlementResult;
 import com.ahn.settlement.dto.request.SettlementCreateRequest;
 import com.ahn.settlement.dto.response.SettlementRecordResponse;
@@ -28,6 +27,7 @@ public class SettlementConfirmService {
     private final SettlementRecordRepository settlementRecordRepository;
     private final CreatorRepository creatorRepository;
     private final SettlementService settlementService;
+    private final FeePolicyService feePolicyService;
 
     @Transactional
     public SettlementRecordResponse create(SettlementCreateRequest request) {
@@ -49,6 +49,7 @@ public class SettlementConfirmService {
 
         SettlementResult result = settlementService.calculateSettlement(request.creatorId(), yearMonth);
 
+        long feeRate = feePolicyService.getRateFor(yearMonth.atDay(1));
         SettlementRecord record = new SettlementRecord(
                 UUID.randomUUID().toString(),
                 request.creatorId(),
@@ -58,7 +59,7 @@ public class SettlementConfirmService {
                 result.netSalesAmount(),
                 result.platformFee(),
                 result.payoutAmount(),
-                FeePolicy.FEE_RATE_PERCENT
+                feeRate
         );
 
         return SettlementRecordResponse.from(settlementRecordRepository.save(record));
