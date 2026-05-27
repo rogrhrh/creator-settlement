@@ -76,6 +76,16 @@ public class SettlementService {
         return new AdminSettlementResponse(startDate.toString(), endDate.toString(), summaries, totalPayout);
     }
 
+    public SettlementResult calculateSettlement(String creatorId, YearMonth yearMonth) {
+        KstDateRange range = KstDateRange.of(yearMonth);
+        SalesSummary sales = saleRecordRepository.summarizeByCreatorAndPeriod(
+                creatorId, range.start(), range.end());
+        RefundsSummary refunds = refundRecordRepository.summarizeByCreatorAndPeriod(
+                creatorId, range.start(), range.end());
+        return SettlementCalculator.calculate(
+                sales.totalAmount(), refunds.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
+    }
+
     private AdminSettlementResponse.CreatorSettlementSummary buildSummary(
             String creatorId,
             Map<String, SaleAggregate> salesMap,
