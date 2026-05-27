@@ -1,6 +1,6 @@
 # 진행 현황 (Progress)
 
-마지막 업데이트: 2026-05-25
+마지막 업데이트: 2026-05-27
 
 ---
 
@@ -14,6 +14,9 @@
 | Phase 3 | 크리에이터 월별 정산 조회 API | ✅ 완료 |
 | Phase 4 | 운영자 기간별 정산 집계 API | ✅ 완료 |
 | Phase 5 | 품질, 선택 구현, README | ✅ 완료 |
+| 선택 — 정산 확정 상태 관리 | PENDING → CONFIRMED → PAID | ✅ 완료 |
+| 선택 — 중복 정산 방지 | 409 Conflict 반환 | ✅ 완료 |
+| 선택 — CSV 다운로드 | RFC 4180 인용 처리 포함 | ✅ 완료 |
 
 ---
 
@@ -27,13 +30,18 @@
 - [x] `docs/decisions.md` 작성 — 설계 결정 10개 (ADR)
 - [x] `docs/superpowers/specs/2026-05-25-creator-settlement-design.md` — 설계 명세
 
+### 선택 구현 (2026-05-27)
+- [x] 정산 확정 상태 관리 — `SettlementRecord` 엔티티, `SettlementStatus` enum, 생성·확정·지급 완료·이력 조회 API (PR #6)
+- [x] 중복 정산 방지 — 동일 creatorId + yearMonth 중복 생성 시 409 Conflict (PR #8)
+- [x] CSV 다운로드 — `GET /api/settlements/csv`, RFC 4180 인용 처리, Content-Disposition 헤더 인젝션 방지 (PR #10)
+
 ---
 
-## 완료된 구현 (2026-05-25)
+## 완료된 구현 (2026-05-27 기준)
 
-- 38 tests, 0 failures — `./gradlew test` BUILD SUCCESSFUL
-- 최종 커밋: `c295f81` (README 포함 전체 완성)
+- 51 tests, 0 failures — `./gradlew test` BUILD SUCCESSFUL
 - 필수 시나리오 4개 전체 통과 (creator-1 / 2025-03 → payoutAmount: 120,000원)
+- 선택 구현 3개 완료 (정산 상태 관리, 중복 방지, CSV 다운로드)
 
 ---
 
