@@ -34,16 +34,16 @@ public class SettlementConfirmService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "크리에이터를 찾을 수 없습니다: " + request.creatorId()));
 
-        if (settlementRecordRepository.existsByCreatorIdAndYearMonth(request.creatorId(), request.yearMonth())) {
-            throw new DuplicateResourceException(
-                    request.creatorId() + "의 " + request.yearMonth() + " 정산이 이미 존재합니다.");
-        }
-
         YearMonth yearMonth;
         try {
             yearMonth = YearMonth.parse(request.yearMonth());
         } catch (DateTimeParseException e) {
             throw new InvalidRequestException("yearMonth 형식이 올바르지 않습니다. 예: 2025-03");
+        }
+
+        if (settlementRecordRepository.existsByCreatorIdAndYearMonth(request.creatorId(), request.yearMonth())) {
+            throw new DuplicateResourceException(
+                    request.creatorId() + "의 " + request.yearMonth() + " 정산이 이미 존재합니다.");
         }
 
         SettlementResult result = settlementService.calculateSettlement(request.creatorId(), yearMonth);
