@@ -6,6 +6,7 @@ import com.ahn.settlement.dto.request.SettlementCreateRequest;
 import com.ahn.settlement.dto.response.SettlementRecordResponse;
 import com.ahn.settlement.entity.SettlementRecord;
 import com.ahn.settlement.entity.SettlementStatus;
+import com.ahn.settlement.exception.DuplicateResourceException;
 import com.ahn.settlement.exception.InvalidRequestException;
 import com.ahn.settlement.exception.ResourceNotFoundException;
 import com.ahn.settlement.repository.CreatorRepository;
@@ -38,6 +39,11 @@ public class SettlementConfirmService {
             yearMonth = YearMonth.parse(request.yearMonth());
         } catch (DateTimeParseException e) {
             throw new InvalidRequestException("yearMonth 형식이 올바르지 않습니다. 예: 2025-03");
+        }
+
+        if (settlementRecordRepository.existsByCreatorIdAndYearMonth(request.creatorId(), request.yearMonth())) {
+            throw new DuplicateResourceException(
+                    request.creatorId() + "의 " + request.yearMonth() + " 정산이 이미 존재합니다.");
         }
 
         SettlementResult result = settlementService.calculateSettlement(request.creatorId(), yearMonth);

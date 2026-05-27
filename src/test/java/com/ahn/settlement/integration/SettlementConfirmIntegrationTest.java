@@ -188,4 +188,42 @@ class SettlementConfirmIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].yearMonth").value("2025-03"));
     }
+
+    @Test
+    void 동일_기간_정산_중복_생성시_409() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                Map.of("creatorId", "creator-1", "yearMonth", "2025-03"));
+
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void 다른_yearMonth는_중복_아님() throws Exception {
+        String body1 = objectMapper.writeValueAsString(
+                Map.of("creatorId", "creator-1", "yearMonth", "2025-03"));
+        String body2 = objectMapper.writeValueAsString(
+                Map.of("creatorId", "creator-1", "yearMonth", "2025-04"));
+
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body1)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body2)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isCreated());
+    }
 }
