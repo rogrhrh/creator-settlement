@@ -9,18 +9,23 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+
+import org.springframework.context.annotation.Profile;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@Profile("!test")
 public class DataLoader implements ApplicationRunner {
 
     private final CreatorRepository creatorRepository;
     private final CourseRepository courseRepository;
     private final SaleRecordRepository saleRecordRepository;
     private final RefundRecordRepository refundRecordRepository;
+    private final FeePolicyHistoryRepository feePolicyHistoryRepository;
 
     private static final ZoneOffset KST = ZoneOffset.ofHours(9);
 
@@ -57,6 +62,9 @@ public class DataLoader implements ApplicationRunner {
                 OffsetDateTime.of(2025, 3, 25, 12, 0, 0, 0, KST)));
         refundRecordRepository.save(new RefundRecord("cancel-3", s5, 60_000L,
                 OffsetDateTime.of(2025, 2, 1, 0, 30, 0, 0, KST)));
+
+        feePolicyHistoryRepository.save(
+            new FeePolicyHistory("fee-policy-1", 20L, LocalDate.of(2020, 1, 1)));
 
         log.info("샘플 데이터 로드 완료");
     }
