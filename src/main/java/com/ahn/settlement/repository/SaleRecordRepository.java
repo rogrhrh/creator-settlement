@@ -33,14 +33,14 @@ public interface SaleRecordRepository extends JpaRepository<SaleRecord, String> 
             @Param("end") OffsetDateTime end);
 
     @Query("""
-            SELECT s FROM SaleRecord s
+            SELECT s FROM SaleRecord s JOIN FETCH s.course
             WHERE s.course.creator.id = :creatorId
             ORDER BY s.paidAt
             """)
     List<SaleRecord> findByCreatorId(@Param("creatorId") String creatorId);
 
     @Query("""
-            SELECT s FROM SaleRecord s
+            SELECT s FROM SaleRecord s JOIN FETCH s.course
             WHERE s.course.creator.id = :creatorId
               AND s.paidAt >= :start AND s.paidAt < :end
             ORDER BY s.paidAt
