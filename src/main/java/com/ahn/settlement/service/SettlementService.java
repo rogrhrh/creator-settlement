@@ -1,6 +1,5 @@
 package com.ahn.settlement.service;
 
-import com.ahn.settlement.domain.FeePolicy;
 import com.ahn.settlement.domain.KstDateRange;
 import com.ahn.settlement.domain.SettlementCalculator;
 import com.ahn.settlement.domain.SettlementResult;
@@ -29,6 +28,7 @@ public class SettlementService {
 
     private final SaleRecordRepository saleRecordRepository;
     private final RefundRecordRepository refundRecordRepository;
+    private final FeePolicyService feePolicyService;
 
     public MonthlySettlementResponse getMonthlySettlement(String creatorId, YearMonth yearMonth) {
         KstDateRange range = KstDateRange.of(yearMonth);
@@ -38,8 +38,9 @@ public class SettlementService {
         RefundsSummary refunds = refundRecordRepository.summarizeByCreatorAndPeriod(
                 creatorId, range.start(), range.end());
 
+        long feeRate = feePolicyService.getRateFor(yearMonth.atDay(1));
         SettlementResult result = SettlementCalculator.calculate(
-                sales.totalAmount(), refunds.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
+                sales.totalAmount(), refunds.totalRefund(), feeRate);
 
         return new MonthlySettlementResponse(
                 creatorId, yearMonth.toString(),
@@ -65,8 +66,10 @@ public class SettlementService {
         allCreatorIds.addAll(salesMap.keySet());
         allCreatorIds.addAll(refundMap.keySet());
 
+        long feeRate = feePolicyService.getRateFor(startDate);
+
         List<AdminSettlementResponse.CreatorSettlementSummary> summaries = allCreatorIds.stream()
-                .map(id -> buildSummary(id, salesMap, refundMap))
+                .map(id -> buildSummary(id, salesMap, refundMap, feeRate))
                 .toList();
 
         long totalPayout = summaries.stream()
@@ -82,14 +85,16 @@ public class SettlementService {
                 creatorId, range.start(), range.end());
         RefundsSummary refunds = refundRecordRepository.summarizeByCreatorAndPeriod(
                 creatorId, range.start(), range.end());
+        long feeRate = feePolicyService.getRateFor(yearMonth.atDay(1));
         return SettlementCalculator.calculate(
-                sales.totalAmount(), refunds.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
+                sales.totalAmount(), refunds.totalRefund(), feeRate);
     }
 
     private AdminSettlementResponse.CreatorSettlementSummary buildSummary(
             String creatorId,
             Map<String, SaleAggregate> salesMap,
-            Map<String, RefundAggregate> refundMap) {
+            Map<String, RefundAggregate> refundMap,
+            long feeRatePercent) {
 
         SaleAggregate sale = salesMap.getOrDefault(creatorId,
                 new SaleAggregate(creatorId, "", 0L, 0L));
@@ -98,7 +103,7 @@ public class SettlementService {
         String creatorName = sale.creatorName().isBlank() ? refund.creatorName() : sale.creatorName();
 
         SettlementResult result = SettlementCalculator.calculate(
-                sale.totalAmount(), refund.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
+                sale.totalAmount(), refund.totalRefund(), feeRatePercent);
 
         return new AdminSettlementResponse.CreatorSettlementSummary(
                 creatorId, creatorName,
