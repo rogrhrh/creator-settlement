@@ -41,7 +41,7 @@ class SaleRecordRepositoryTest {
         saleRecordRepository.save(new SaleRecord("s2", course, "stu2", 80_000L,
                 OffsetDateTime.of(2025, 3, 20, 9, 0, 0, 0, KST)));
 
-        Long sum = saleRecordRepository.sumAmountByCreatorAndPeriod("creator-1", start, end);
+        long sum = saleRecordRepository.summarizeByCreatorAndPeriod("creator-1", start, end).totalAmount();
 
         assertThat(sum).isEqualTo(130_000L);
     }
@@ -54,7 +54,7 @@ class SaleRecordRepositoryTest {
         saleRecordRepository.save(new SaleRecord("s3", course, "stu3", 60_000L,
                 OffsetDateTime.of(2025, 2, 28, 23, 59, 59, 0, KST)));
 
-        Long sum = saleRecordRepository.sumAmountByCreatorAndPeriod("creator-1", start, end);
+        long sum = saleRecordRepository.summarizeByCreatorAndPeriod("creator-1", start, end).totalAmount();
 
         assertThat(sum).isZero();
     }
@@ -64,7 +64,7 @@ class SaleRecordRepositoryTest {
         OffsetDateTime start = OffsetDateTime.of(2025, 3, 1, 0, 0, 0, 0, KST);
         OffsetDateTime end = OffsetDateTime.of(2025, 4, 1, 0, 0, 0, 0, KST);
 
-        Long sum = saleRecordRepository.sumAmountByCreatorAndPeriod("creator-1", start, end);
+        long sum = saleRecordRepository.summarizeByCreatorAndPeriod("creator-1", start, end).totalAmount();
 
         assertThat(sum).isZero();
     }
