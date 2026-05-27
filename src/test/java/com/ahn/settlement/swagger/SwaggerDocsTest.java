@@ -30,4 +30,14 @@ class SwaggerDocsTest {
         mockMvc.perform(get("/swagger-ui/index.html"))
                 .andExpect(status().is3xxRedirection());
     }
+
+    @Test
+    void apiDocs_태그_포함_확인() throws Exception {
+        mockMvc.perform(get("/v3/api-docs"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.tags[?(@.name == '판매 기록')]").exists())
+                .andExpect(jsonPath("$.tags[?(@.name == '환불 기록')]").exists())
+                .andExpect(jsonPath("$.tags[?(@.name == '정산')]").exists())
+                .andExpect(jsonPath("$.tags[?(@.name == '수수료 정책')]").exists());
+    }
 }
