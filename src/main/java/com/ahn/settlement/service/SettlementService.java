@@ -39,7 +39,7 @@ public class SettlementService {
                 creatorId, range.start(), range.end());
 
         SettlementResult result = SettlementCalculator.calculate(
-                sales.totalAmount(), refunds.totalRefund());
+                sales.totalAmount(), refunds.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
 
         return new MonthlySettlementResponse(
                 creatorId, yearMonth.toString(),
@@ -88,7 +88,7 @@ public class SettlementService {
         String creatorName = sale.creatorName().isBlank() ? refund.creatorName() : sale.creatorName();
 
         SettlementResult result = SettlementCalculator.calculate(
-                sale.totalAmount(), refund.totalRefund());
+                sale.totalAmount(), refund.totalRefund(), FeePolicy.FEE_RATE_PERCENT);
 
         return new AdminSettlementResponse.CreatorSettlementSummary(
                 creatorId, creatorName,
