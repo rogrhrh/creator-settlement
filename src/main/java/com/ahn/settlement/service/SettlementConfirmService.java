@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.UUID;
 
 @Service
@@ -91,5 +92,34 @@ public class SettlementConfirmService {
                 .stream()
                 .map(SettlementRecordResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public String getHistoryCsv(String creatorId) {
+        List<SettlementRecord> records =
+                settlementRecordRepository.findByCreatorIdOrderByYearMonthDesc(creatorId);
+
+        StringJoiner csv = new StringJoiner("\n");
+        csv.add("id,creatorId,yearMonth,status,totalSalesAmount,totalRefundAmount," +
+                "netSalesAmount,platformFee,payoutAmount,feeRatePercent,createdAt,confirmedAt,paidAt");
+
+        for (SettlementRecord r : records) {
+            csv.add(String.join(",",
+                    r.getId(),
+                    r.getCreatorId(),
+                    r.getYearMonth(),
+                    r.getStatus().name(),
+                    String.valueOf(r.getTotalSalesAmount()),
+                    String.valueOf(r.getTotalRefundAmount()),
+                    String.valueOf(r.getNetSalesAmount()),
+                    String.valueOf(r.getPlatformFee()),
+                    String.valueOf(r.getPayoutAmount()),
+                    String.valueOf(r.getFeeRatePercent()),
+                    r.getCreatedAt().toString(),
+                    r.getConfirmedAt() != null ? r.getConfirmedAt().toString() : "",
+                    r.getPaidAt() != null ? r.getPaidAt().toString() : ""
+            ));
+        }
+        return csv.toString();
     }
 }
