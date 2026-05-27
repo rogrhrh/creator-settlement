@@ -13,12 +13,9 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 
-import org.springframework.context.annotation.Profile;
-
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Profile("!test")
 public class DataLoader implements ApplicationRunner {
 
     private final CreatorRepository creatorRepository;

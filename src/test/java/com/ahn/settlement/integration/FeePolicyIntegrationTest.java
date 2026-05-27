@@ -24,7 +24,7 @@ class FeePolicyIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        feePolicyHistoryRepository.deleteAll();
+        feePolicyHistoryRepository.deleteAllInBatch();
         feePolicyHistoryRepository.save(
             new FeePolicyHistory("fp-init", 20L, LocalDate.of(2020, 1, 1)));
     }
