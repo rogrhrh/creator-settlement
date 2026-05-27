@@ -2,24 +2,26 @@ package com.ahn.settlement.integration;
 
 import com.ahn.settlement.entity.FeePolicyHistory;
 import com.ahn.settlement.repository.FeePolicyHistoryRepository;
-import com.ahn.settlement.service.FeePolicyService;
-import com.ahn.settlement.exception.DuplicateResourceException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.util.List;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @SpringBootTest
+@AutoConfigureMockMvc
 @Transactional
 class FeePolicyIntegrationTest {
 
-    @Autowired FeePolicyService feePolicyService;
+    @Autowired MockMvc mockMvc;
     @Autowired FeePolicyHistoryRepository feePolicyHistoryRepository;
 
     @BeforeEach
@@ -30,35 +32,74 @@ class FeePolicyIntegrationTest {
     }
 
     @Test
-    void getRateFor_시드_데이터_기준_20퍼센트_반환() {
-        long rate = feePolicyService.getRateFor(LocalDate.of(2025, 3, 1));
-        assertThat(rate).isEqualTo(20L);
+    void POST_수수료율_등록_성공() throws Exception {
+        mockMvc.perform(post("/api/fee-policies")
+                .header("X-User-Role", "ADMIN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ratePercent\": 15, \"effectiveFrom\": \"2025-06-01\"}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.ratePercent").value(15))
+            .andExpect(jsonPath("$.effectiveFrom").value("2025-06-01"));
     }
 
     @Test
-    void getRateFor_변경_후_이전_날짜는_구_수수료율_반환() {
+    void POST_중복_effectiveFrom_409_반환() throws Exception {
+        mockMvc.perform(post("/api/fee-policies")
+                .header("X-User-Role", "ADMIN")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ratePercent\": 15, \"effectiveFrom\": \"2020-01-01\"}"))
+            .andExpect(status().isConflict());
+    }
+
+    @Test
+    void POST_ADMIN_아닌_역할_403_반환() throws Exception {
+        mockMvc.perform(post("/api/fee-policies")
+                .header("X-User-Role", "CREATOR")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"ratePercent\": 15, \"effectiveFrom\": \"2025-06-01\"}"))
+            .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void GET_이력_조회_내림차순() throws Exception {
         feePolicyHistoryRepository.save(
             new FeePolicyHistory("fp-new", 10L, LocalDate.of(2025, 4, 1)));
 
-        assertThat(feePolicyService.getRateFor(LocalDate.of(2025, 3, 31))).isEqualTo(20L);
-        assertThat(feePolicyService.getRateFor(LocalDate.of(2025, 4, 1))).isEqualTo(10L);
-        assertThat(feePolicyService.getRateFor(LocalDate.of(2025, 5, 1))).isEqualTo(10L);
+        mockMvc.perform(get("/api/fee-policies")
+                .header("X-User-Role", "ADMIN"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.length()").value(2))
+            .andExpect(jsonPath("$[0].effectiveFrom").value("2025-04-01"))
+            .andExpect(jsonPath("$[1].effectiveFrom").value("2020-01-01"));
     }
 
     @Test
-    void add_중복_effectiveFrom_시_DuplicateResourceException() {
-        assertThatThrownBy(() -> feePolicyService.add(15L, LocalDate.of(2020, 1, 1)))
-            .isInstanceOf(DuplicateResourceException.class);
-    }
-
-    @Test
-    void getHistory_내림차순_반환() {
+    void 수수료율_변경_후_이전_월_정산은_구_수수료율_적용() throws Exception {
         feePolicyHistoryRepository.save(
-            new FeePolicyHistory("fp-b", 15L, LocalDate.of(2025, 4, 1)));
+            new FeePolicyHistory("fp-new", 10L, LocalDate.of(2025, 4, 1)));
 
-        List<FeePolicyHistory> history = feePolicyService.getHistory();
-        assertThat(history).hasSize(2);
-        assertThat(history.get(0).getEffectiveFrom()).isEqualTo(LocalDate.of(2025, 4, 1));
-        assertThat(history.get(1).getEffectiveFrom()).isEqualTo(LocalDate.of(2020, 1, 1));
+        // 2025-03 creator-1: 순매출 150000, 수수료 20% = 30000, 지급 120000
+        mockMvc.perform(get("/api/settlements/creators/creator-1")
+                .param("yearMonth", "2025-03")
+                .header("X-User-Id", "creator-1")
+                .header("X-User-Role", "CREATOR"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.platformFee").value(30000))
+            .andExpect(jsonPath("$.payoutAmount").value(120000));
+    }
+
+    @Test
+    void 수수료율_변경_후_이후_월_정산은_신_수수료율_적용() throws Exception {
+        feePolicyHistoryRepository.save(
+            new FeePolicyHistory("fp-new", 10L, LocalDate.of(2025, 3, 1)));
+
+        // 2025-03 creator-1: 순매출 150000, 수수료 10% = 15000, 지급 135000
+        mockMvc.perform(get("/api/settlements/creators/creator-1")
+                .param("yearMonth", "2025-03")
+                .header("X-User-Id", "creator-1")
+                .header("X-User-Role", "CREATOR"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.platformFee").value(15000))
+            .andExpect(jsonPath("$.payoutAmount").value(135000));
     }
 }
