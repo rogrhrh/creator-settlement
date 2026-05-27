@@ -1,6 +1,9 @@
 package com.ahn.settlement.integration;
 
+import com.ahn.settlement.entity.*;
+import com.ahn.settlement.repository.*;
 import tools.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -9,6 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
@@ -22,6 +27,37 @@ class SettlementConfirmIntegrationTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
+    @Autowired CreatorRepository creatorRepository;
+    @Autowired CourseRepository courseRepository;
+    @Autowired SaleRecordRepository saleRecordRepository;
+    @Autowired RefundRecordRepository refundRecordRepository;
+
+    private static final ZoneOffset KST = ZoneOffset.ofHours(9);
+
+    @BeforeEach
+    void setUp() {
+        Creator creator = creatorRepository.findById("creator-1")
+                .orElseGet(() -> creatorRepository.save(new Creator("creator-1", "김강사")));
+        Course co1 = courseRepository.findById("course-1")
+                .orElseGet(() -> courseRepository.save(new Course("course-1", creator, "Spring Boot 입문")));
+        Course co2 = courseRepository.findById("course-2")
+                .orElseGet(() -> courseRepository.save(new Course("course-2", creator, "JPA 실전")));
+
+        if (!saleRecordRepository.existsById("sale-1")) {
+            SaleRecord s1 = saleRecordRepository.save(new SaleRecord("sale-1", co1, "student-1", 50_000L,
+                    OffsetDateTime.of(2025, 3, 5, 10, 0, 0, 0, KST)));
+            SaleRecord s2 = saleRecordRepository.save(new SaleRecord("sale-2", co1, "student-2", 50_000L,
+                    OffsetDateTime.of(2025, 3, 15, 14, 30, 0, 0, KST)));
+            SaleRecord s3 = saleRecordRepository.save(new SaleRecord("sale-3", co2, "student-3", 80_000L,
+                    OffsetDateTime.of(2025, 3, 20, 9, 0, 0, 0, KST)));
+            SaleRecord s4 = saleRecordRepository.save(new SaleRecord("sale-4", co2, "student-4", 80_000L,
+                    OffsetDateTime.of(2025, 3, 22, 11, 0, 0, 0, KST)));
+            refundRecordRepository.save(new RefundRecord("cancel-1", s3, 80_000L,
+                    OffsetDateTime.of(2025, 3, 21, 10, 0, 0, 0, KST)));
+            refundRecordRepository.save(new RefundRecord("cancel-2", s4, 30_000L,
+                    OffsetDateTime.of(2025, 3, 25, 12, 0, 0, 0, KST)));
+        }
+    }
 
     @Test
     void 정산_생성_creator1_2025_03_payoutAmount_120000() throws Exception {
