@@ -15,6 +15,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
 
 import java.nio.charset.StandardCharsets;
 
@@ -76,7 +77,7 @@ public class SettlementController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_TYPE, "text/csv;charset=UTF-8")
                 .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"settlement_" + creatorId + ".csv\"")
+                        "attachment; filename*=UTF-8''" + UriUtils.encode("settlement_" + creatorId + ".csv", StandardCharsets.UTF_8))
                 .body(csv);
     }
 

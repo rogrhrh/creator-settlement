@@ -105,21 +105,25 @@ public class SettlementConfirmService {
 
         for (SettlementRecord r : records) {
             csv.add(String.join(",",
-                    r.getId(),
-                    r.getCreatorId(),
-                    r.getYearMonth(),
-                    r.getStatus().name(),
-                    String.valueOf(r.getTotalSalesAmount()),
-                    String.valueOf(r.getTotalRefundAmount()),
-                    String.valueOf(r.getNetSalesAmount()),
-                    String.valueOf(r.getPlatformFee()),
-                    String.valueOf(r.getPayoutAmount()),
-                    String.valueOf(r.getFeeRatePercent()),
-                    r.getCreatedAt().toString(),
-                    r.getConfirmedAt() != null ? r.getConfirmedAt().toString() : "",
-                    r.getPaidAt() != null ? r.getPaidAt().toString() : ""
+                    csvField(r.getId()),
+                    csvField(r.getCreatorId()),
+                    csvField(r.getYearMonth()),
+                    csvField(r.getStatus().name()),
+                    csvField(String.valueOf(r.getTotalSalesAmount())),
+                    csvField(String.valueOf(r.getTotalRefundAmount())),
+                    csvField(String.valueOf(r.getNetSalesAmount())),
+                    csvField(String.valueOf(r.getPlatformFee())),
+                    csvField(String.valueOf(r.getPayoutAmount())),
+                    csvField(String.valueOf(r.getFeeRatePercent())),
+                    csvField(r.getCreatedAt().toString()),
+                    csvField(r.getConfirmedAt() != null ? r.getConfirmedAt().toString() : ""),
+                    csvField(r.getPaidAt() != null ? r.getPaidAt().toString() : "")
             ));
         }
         return csv.toString();
+    }
+
+    private String csvField(String value) {
+        return "\"" + value.replace("\"", "\"\"") + "\"";
     }
 }

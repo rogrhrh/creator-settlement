@@ -243,7 +243,7 @@ class SettlementConfirmIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("text/csv")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
-                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename=\"settlement_creator-1.csv\"")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename*=UTF-8''settlement_creator-1.csv")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("2025-03")));
     }
