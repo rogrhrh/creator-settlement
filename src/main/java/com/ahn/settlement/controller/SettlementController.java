@@ -11,8 +11,13 @@ import com.ahn.settlement.service.SettlementService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UriUtils;
+
+import java.nio.charset.StandardCharsets;
 
 import java.time.LocalDate;
 import java.time.YearMonth;
@@ -59,6 +64,21 @@ public class SettlementController {
             @RequestHeader("X-User-Role") String userRole) {
         authValidator.validateCreatorAccess(userId, userRole, creatorId);
         return settlementConfirmService.getHistory(creatorId);
+    }
+
+    @GetMapping("/creators/{creatorId}/history/csv")
+    public ResponseEntity<byte[]> getSettlementHistoryCsv(
+            @PathVariable String creatorId,
+            @RequestHeader("X-User-Id") String userId,
+            @RequestHeader("X-User-Role") String userRole) {
+        authValidator.validateCreatorAccess(userId, userRole, creatorId);
+        byte[] csv = settlementConfirmService.getHistoryCsv(creatorId)
+                .getBytes(StandardCharsets.UTF_8);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_TYPE, "text/csv;charset=UTF-8")
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        "attachment; filename*=UTF-8''" + UriUtils.encode("settlement_" + creatorId + ".csv", StandardCharsets.UTF_8))
+                .body(csv);
     }
 
     @GetMapping("/creators/{creatorId}")
