@@ -243,17 +243,27 @@ class SettlementConfirmIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("text/csv")))
                 .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("filename=\"settlement_creator-1.csv\"")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")))
                 .andExpect(content().string(org.hamcrest.Matchers.containsString("2025-03")));
     }
 
     @Test
     void 본인_CREATOR로_CSV_다운로드_성공() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                Map.of("creatorId", "creator-1", "yearMonth", "2025-03"));
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isCreated());
+
         mockMvc.perform(get("/api/settlements/creators/creator-1/history/csv")
                         .header("X-User-Id", "creator-1")
                         .header("X-User-Role", "CREATOR"))
                 .andExpect(status().isOk())
-                .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")));
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("2025-03")));
     }
 
     @Test
