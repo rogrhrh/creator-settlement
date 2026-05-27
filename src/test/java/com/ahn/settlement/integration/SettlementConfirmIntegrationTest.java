@@ -226,4 +226,52 @@ class SettlementConfirmIntegrationTest {
                         .header("X-User-Role", "ADMIN"))
                 .andExpect(status().isCreated());
     }
+
+    @Test
+    void ADMIN으로_CSV_다운로드_성공() throws Exception {
+        String body = objectMapper.writeValueAsString(
+                Map.of("creatorId", "creator-1", "yearMonth", "2025-03"));
+        mockMvc.perform(post("/api/settlements")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(body)
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/settlements/creators/creator-1/history/csv")
+                        .header("X-User-Id", "admin-1")
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Content-Type", org.hamcrest.Matchers.containsString("text/csv")))
+                .andExpect(header().string("Content-Disposition", org.hamcrest.Matchers.containsString("attachment")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")))
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("2025-03")));
+    }
+
+    @Test
+    void 본인_CREATOR로_CSV_다운로드_성공() throws Exception {
+        mockMvc.perform(get("/api/settlements/creators/creator-1/history/csv")
+                        .header("X-User-Id", "creator-1")
+                        .header("X-User-Role", "CREATOR"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id,creatorId,yearMonth")));
+    }
+
+    @Test
+    void 타_CREATOR로_CSV_다운로드시_403() throws Exception {
+        mockMvc.perform(get("/api/settlements/creators/creator-1/history/csv")
+                        .header("X-User-Id", "creator-2")
+                        .header("X-User-Role", "CREATOR"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void 정산_이력_없는_경우_헤더만_포함된_CSV() throws Exception {
+        mockMvc.perform(get("/api/settlements/creators/creator-3/history/csv")
+                        .header("X-User-Id", "admin-1")
+                        .header("X-User-Role", "ADMIN"))
+                .andExpect(status().isOk())
+                .andExpect(content().string("id,creatorId,yearMonth,status,totalSalesAmount," +
+                        "totalRefundAmount,netSalesAmount,platformFee,payoutAmount," +
+                        "feeRatePercent,createdAt,confirmedAt,paidAt"));
+    }
 }
