@@ -7,4 +7,6 @@ import java.util.List;
 
 public interface SettlementRecordRepository extends JpaRepository<SettlementRecord, String> {
     List<SettlementRecord> findByCreatorIdOrderByYearMonthDesc(String creatorId);
+
+    boolean existsByCreatorIdAndYearMonth(String creatorId, String yearMonth);
 }

@@ -6,6 +6,7 @@ import com.ahn.settlement.dto.request.SettlementCreateRequest;
 import com.ahn.settlement.dto.response.SettlementRecordResponse;
 import com.ahn.settlement.entity.SettlementRecord;
 import com.ahn.settlement.entity.SettlementStatus;
+import com.ahn.settlement.exception.DuplicateResourceException;
 import com.ahn.settlement.exception.InvalidRequestException;
 import com.ahn.settlement.exception.ResourceNotFoundException;
 import com.ahn.settlement.repository.CreatorRepository;
@@ -32,6 +33,11 @@ public class SettlementConfirmService {
         creatorRepository.findById(request.creatorId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "크리에이터를 찾을 수 없습니다: " + request.creatorId()));
+
+        if (settlementRecordRepository.existsByCreatorIdAndYearMonth(request.creatorId(), request.yearMonth())) {
+            throw new DuplicateResourceException(
+                    request.creatorId() + "의 " + request.yearMonth() + " 정산이 이미 존재합니다.");
+        }
 
         YearMonth yearMonth;
         try {
