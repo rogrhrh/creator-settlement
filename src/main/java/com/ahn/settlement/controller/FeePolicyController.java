@@ -14,7 +14,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/fee-policies")
 @RequiredArgsConstructor
-public class FeePolicyController {
+public class FeePolicyController implements FeePolicyControllerSpec {
 
     private final FeePolicyService feePolicyService;
     private final AuthValidator authValidator;

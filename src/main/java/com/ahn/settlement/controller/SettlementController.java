@@ -26,7 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/settlements")
 @RequiredArgsConstructor
-public class SettlementController {
+public class SettlementController implements SettlementControllerSpec {
 
     private final SettlementService settlementService;
     private final SettlementConfirmService settlementConfirmService;

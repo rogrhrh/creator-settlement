@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/refunds")
 @RequiredArgsConstructor
-public class RefundController {
+public class RefundController implements RefundControllerSpec {
 
     private final RefundService refundService;
 
