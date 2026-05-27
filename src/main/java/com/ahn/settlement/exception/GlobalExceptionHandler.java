@@ -39,6 +39,15 @@ public class GlobalExceptionHandler {
         return new ErrorResponse(message);
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTypeMismatch(
+            org.springframework.web.method.annotation.MethodArgumentTypeMismatchException e) {
+        Throwable cause = e.getCause();
+        String message = (cause != null) ? cause.getMessage() : "요청 파라미터 형식이 올바르지 않습니다.";
+        return new ErrorResponse(message);
+    }
+
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ErrorResponse handleGeneral(Exception e) {

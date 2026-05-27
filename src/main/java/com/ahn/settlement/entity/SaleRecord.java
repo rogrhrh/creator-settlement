@@ -8,7 +8,10 @@ import lombok.NoArgsConstructor;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "sale_records")
+@Table(name = "sale_records", indexes = {
+        @Index(name = "idx_sale_records_paid_at", columnList = "paid_at"),
+        @Index(name = "idx_sale_records_course_id", columnList = "course_id")
+})
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SaleRecord {

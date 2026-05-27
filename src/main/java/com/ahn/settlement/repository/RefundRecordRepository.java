@@ -1,5 +1,7 @@
 package com.ahn.settlement.repository;
 
+import com.ahn.settlement.dto.query.RefundAggregate;
+import com.ahn.settlement.dto.query.RefundsSummary;
 import com.ahn.settlement.entity.RefundRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -18,35 +20,26 @@ public interface RefundRecordRepository extends JpaRepository<RefundRecord, Stri
     Long sumRefundBySaleRecordId(@Param("saleRecordId") String saleRecordId);
 
     @Query("""
-            SELECT COALESCE(SUM(r.refundAmount), 0)
+            SELECT new com.ahn.settlement.dto.query.RefundsSummary(
+                COALESCE(SUM(r.refundAmount), 0), COUNT(r))
             FROM RefundRecord r
             WHERE r.saleRecord.course.creator.id = :creatorId
               AND r.canceledAt >= :start AND r.canceledAt < :end
             """)
-    Long sumRefundByCreatorAndPeriod(
+    RefundsSummary summarizeByCreatorAndPeriod(
             @Param("creatorId") String creatorId,
             @Param("start") OffsetDateTime start,
             @Param("end") OffsetDateTime end);
 
     @Query("""
-            SELECT COUNT(r)
-            FROM RefundRecord r
-            WHERE r.saleRecord.course.creator.id = :creatorId
-              AND r.canceledAt >= :start AND r.canceledAt < :end
-            """)
-    long countByCreatorAndPeriod(
-            @Param("creatorId") String creatorId,
-            @Param("start") OffsetDateTime start,
-            @Param("end") OffsetDateTime end);
-
-    @Query("""
-            SELECT r.saleRecord.course.creator.id,
-                   COALESCE(SUM(r.refundAmount), 0), COUNT(r)
+            SELECT new com.ahn.settlement.dto.query.RefundAggregate(
+                r.saleRecord.course.creator.id, r.saleRecord.course.creator.name,
+                COALESCE(SUM(r.refundAmount), 0), COUNT(r))
             FROM RefundRecord r
             WHERE r.canceledAt >= :start AND r.canceledAt < :end
-            GROUP BY r.saleRecord.course.creator.id
+            GROUP BY r.saleRecord.course.creator.id, r.saleRecord.course.creator.name
             """)
-    List<Object[]> aggregateRefundsByCreator(
+    List<RefundAggregate> aggregateRefundsByCreator(
             @Param("start") OffsetDateTime start,
             @Param("end") OffsetDateTime end);
 }

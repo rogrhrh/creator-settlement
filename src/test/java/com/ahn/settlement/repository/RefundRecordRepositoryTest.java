@@ -54,7 +54,7 @@ class RefundRecordRepositoryTest {
         refundRecordRepository.save(new RefundRecord("r1", sale, 30_000L,
                 OffsetDateTime.of(2025, 3, 25, 12, 0, 0, 0, KST)));
 
-        Long sum = refundRecordRepository.sumRefundByCreatorAndPeriod("c1", start, end);
+        long sum = refundRecordRepository.summarizeByCreatorAndPeriod("c1", start, end).totalRefund();
 
         assertThat(sum).isEqualTo(30_000L);
     }
@@ -69,7 +69,7 @@ class RefundRecordRepositoryTest {
         OffsetDateTime febStart = OffsetDateTime.of(2025, 2, 1, 0, 0, 0, 0, KST);
         OffsetDateTime febEnd = OffsetDateTime.of(2025, 3, 1, 0, 0, 0, 0, KST);
 
-        assertThat(refundRecordRepository.sumRefundByCreatorAndPeriod("c1", marStart, marEnd)).isZero();
-        assertThat(refundRecordRepository.sumRefundByCreatorAndPeriod("c1", febStart, febEnd)).isEqualTo(60_000L);
+        assertThat(refundRecordRepository.summarizeByCreatorAndPeriod("c1", marStart, marEnd).totalRefund()).isZero();
+        assertThat(refundRecordRepository.summarizeByCreatorAndPeriod("c1", febStart, febEnd).totalRefund()).isEqualTo(60_000L);
     }
 }
